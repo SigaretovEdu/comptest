@@ -82,6 +82,10 @@ def read_tests(testpath: str):
     return tests
 
 
+def clear_text(text: str):
+    return re.sub(r'[ \t]+\n$', '\n', text)
+
+
 def run_test(test, exe_file: str):
     cmd = ""
     type = gettype(exe_file)
@@ -106,7 +110,7 @@ def run_test(test, exe_file: str):
         outs = proc.communicate()
         result = 'TL'
 
-    return [result, outs[0]]
+    return [result, clear_text(outs[0])]
 
 
 class bcolors:
@@ -132,6 +136,8 @@ def print_diff(out, ver):
 
 
 def check_exe_test(num: int, inp: str, ver: str, exe_file: str):
+    if ver is not None:
+        ver = clear_text(ver)
     code, out = run_test(inp, exe_file)
     if code != 'OK':
         print(f"{bcolors.FAIL}{code}{bcolors.ENDC}")
@@ -145,7 +151,7 @@ def check_exe_test(num: int, inp: str, ver: str, exe_file: str):
             print(f"{bcolors.FAIL}<<<<<<{bcolors.ENDC} ", end='')
             print(f"{bcolors.FAIL}TEST_{num} WA{bcolors.ENDC}")
             print(f"{bcolors.FAIL}{inp}{bcolors.ENDC}", end='')
-            print(f"{bcolors.FAIL}<<<<<<{bcolors.ENDC}")
+            print(f"{bcolors.FAIL}<<<<<< OUTPUT{bcolors.ENDC}")
             print_diff(out, ver)
             print(f"{bcolors.FAIL}<<<<<<{bcolors.ENDC}\n")
 
@@ -154,7 +160,7 @@ def check_exe_test(num: int, inp: str, ver: str, exe_file: str):
         print(f"{bcolors.OKBLUE}<<<<<<{bcolors.ENDC} ", end='')
         print(f"{bcolors.OKBLUE}TEST_{num} UNKNOWN{bcolors.ENDC}")
         print(f"{bcolors.OKBLUE}{inp}{bcolors.ENDC}", end='')
-        print(f"{bcolors.OKBLUE}<<<<<<{bcolors.ENDC}")
+        print(f"{bcolors.OKBLUE}<<<<<< OUTPUT{bcolors.ENDC}")
         print(f"{out}", end='')
         print(f"{bcolors.OKBLUE}<<<<<<{bcolors.ENDC}\n")
 
