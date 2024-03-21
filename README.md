@@ -74,3 +74,9 @@ TL = 1
 ## TODO:
 
 Rewrite in C/C++
+
+Add option to exclude test
+
+Add options for quite output
+
+Rewrite diff without icdiff
