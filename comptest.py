@@ -10,11 +10,11 @@ import signal
 compile_options = {
     "cpp": {
         "compiler": "g++",
-        "options": ["-Wall", "-Wextra", "-Wpedantic", "-o"]
+        "options": ["-Wall", "-Wextra", "-Wpedantic", "-O2", "-g", "-o"]
     },
     "c": {
         "compiler": "gcc",
-        "options": ["-Wall", "-Wextra", "-Wpedantic", "-o"]
+        "options": ["-Wall", "-Wextra", "-Wpedantic", "-O2", "-g", "-o"]
     },
 }
 
@@ -22,7 +22,7 @@ run_options = {
     "py": "python"
 }
 
-# TL in seconds
+# default TL in seconds
 TL = 1
 
 
@@ -52,6 +52,9 @@ def read_tests(testpath: str):
         in_test = False
         for l in lines:
             # start reading test
+            if l[0:2] == "TL":
+                global TL
+                TL = int(l.replace('\n', '').split('=')[-1])
             if l[0:2] == ">>":
                 l = re.sub(r'\s*$', '', l)
             if not in_test and l[0:2] == ">>":
@@ -130,7 +133,7 @@ def print_diff(out, ver):
     f2.write(ver)
     f2.close()
 
-    with subprocess.Popen(['icdiff', '--no-headers', '--color-map=change:red_bold', 'build/left.txt', 'build/right.txt'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True) as proc:
+    with subprocess.Popen(['icdiff', '--no-headers', '--whole-file', '--color-map=change:red_bold', 'build/left.txt', 'build/right.txt'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True) as proc:
         for line in proc.stdout:
             print(line, end='')
 
@@ -140,9 +143,17 @@ def check_exe_test(num: int, inp: str, ver: str, exe_file: str):
         ver = clear_text(ver)
     code, out = run_test(inp, exe_file)
     if code != 'OK':
-        print(f"{bcolors.FAIL}{code}{bcolors.ENDC}")
-        print(inp)
-        print(out)
+        # print(f"{bcolors.FAIL}{code}{bcolors.ENDC}")
+        # print(inp)
+        # print(out)
+
+        print(f"{bcolors.FAIL}<<<<<<{bcolors.ENDC} ", end='')
+        print(f"{bcolors.FAIL}TEST_{num} {code}{bcolors.ENDC}")
+        print(f"{bcolors.FAIL}{inp}{bcolors.ENDC}", end='')
+        print(f"{bcolors.FAIL}<<<<<< OUTPUT{bcolors.ENDC}")
+        print(f"{out}", end='')
+        print(f"{bcolors.FAIL}<<<<<<{bcolors.ENDC}\n")
+
         return 1
     if ver is not None:
         if out == ver:
@@ -227,15 +238,20 @@ if checker_file != None:
 
 alltests = read_tests(test_file)
 # print(alltests)
+print(f"TL = {TL} sec")
 
 if run_check is None:
     ok, failed, unknown = 0, 0, 0
     summary = len(alltests.keys())
     if test_num is not None:
-        if test_num not in alltests.keys():
+        if abs(test_num) not in alltests.keys():
             print(f"There is no test with num {test_num}")
             sys.exit()
-        keys = [test_num]
+        if test_num > 0:
+            keys = [test_num]
+        else:
+            keys = list(alltests.keys())
+            keys.remove(abs(test_num))
     else:
         keys = alltests.keys()
     for k in keys:
