@@ -15,6 +15,7 @@ comptest source test [-c,--checker checker] [-t,--test
 4. Can specify -d/--disable-test to disable comparsion of output and output from
    test
 5. Can specify TL in testfile
+6. Use custom diff
 
 Output should be like:
 
