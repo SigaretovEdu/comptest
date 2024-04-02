@@ -54,3 +54,29 @@ output
 input
 <<
 ```
+
+```
+Usage: comptest [OPTIONS...] sourcefile testsfiles...
+
+    -t, --test testfile:[NUM][NUM,...,NUM][NUM..NUM]    specify tests to use from file, [NUM] will use the only test,
+                                                        [NUM,...,NUM] will use tests in specified list, [NUM..NUM]
+                                                        will use test in range
+
+    -c, --compare sourcefile                            specify file with another solution, every test will be passed
+                                                        to your solution and this file, outputs will be compared
+
+    -q, --quite                                         do not show the outputs of test, only result for every test
+
+    -d, --disable                                       disable comparing output from your solution with
+                                                        specified in test file
+
+    -h, --help                                          show this message
+
+    -g, --gen NUM                                       will generate tests using testfile while outputs from source
+                                                        file and comparator are equal, with NUM you can specify
+                                                        maximum tests to generate, in this case the testfile is
+                                                        subject to the same restrictions as sourcefile
+```
+
+comptest source test [-c,--checker checker] [-t,--test
++-[NUM][NUM,...,NUM][NUM..NUM]] [-q, --quite] [-d, --disable-test]
