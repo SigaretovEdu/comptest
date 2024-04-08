@@ -75,8 +75,32 @@ Usage: comptest [OPTIONS...] sourcefile testsfiles...
     -g, --gen NUM                                       will generate tests using testfile while outputs from source
                                                         file and comparator are equal, with NUM you can specify
                                                         maximum tests to generate, in this case the testfile is
-                                                        subject to the same restrictions as sourcefile
+                                                        subject to the same restrictions as sourcefile and you must
+                                                        use comparator
 ```
 
 comptest source test [-c,--checker checker] [-t,--test
 +-[NUM][NUM,...,NUM][NUM..NUM]] [-q, --quite] [-d, --disable-test]
+
+```
+-- 1
+1
+2
+-- out
+1 2 3
+-- out
+2 1 3
+--
+
+-- 2
+2
+3
+-- out
+2 3 5
+--
+
+-- 3
+1
+2
+--
+```

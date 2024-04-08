@@ -1,10 +1,19 @@
 #pragma once
 
+#include <algorithm>
+#include <cmath>
 #include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <map>
+#include <mutex>
+#include <queue>
 #include <string>
+#include <unistd.h>
 #include <vector>
+
+#define ll long long
+#define ull unsigned long long
 
 struct Params;
 class Logger;
@@ -17,17 +26,17 @@ class Logger {
 
 	Logger& operator[](Loglevel l) {
 		switch(l) {
-		case INFO: {
-			std::cout << "[INFO ] ";
-			break;
-		}
-		case ERROR: {
-			std::cout << "[ERROR] ";
-			break;
-		}
-		case DEBUG: {
-			break;
-		}
+			case INFO: {
+				std::cout << "[INFO ] ";
+				break;
+			}
+			case ERROR: {
+				std::cout << "[ERROR] ";
+				break;
+			}
+			case DEBUG: {
+				break;
+			}
 		}
 		return *this;
 	}
@@ -38,7 +47,7 @@ class Logger {
 		return *this;
 	}
 };
-static Logger logger;
+static Logger logg;
 
 struct Params {
 	std::string sourceFile;
@@ -51,31 +60,47 @@ struct Params {
 	bool gen;
 	int genLimit;
 
+	std::string runSource;
+	std::string runComparator;
+	std::string runTest;
+
 	Params(): exclude(false), quite(false), disableChecking(false), gen(false), genLimit(-1) {}
 
 	void info() const {
-		logger[INFO] << "sourceFile: " << sourceFile << "\n";
-		logger[INFO] << "testFiles: " << testFiles.size() << "\n";
+		logg[INFO] << "sourceFile: " << sourceFile << "\n";
+		logg[INFO] << "testFiles: " << testFiles.size() << "\n";
 		for(size_t i = 0; i < testFiles.size(); ++i) {
-			logger[INFO] << "\t" << testFiles[i] << "\n";
+			logg[INFO] << "\t" << testFiles[i] << "\n";
 		}
-		logger[INFO] << "comparator: " << comparator << "\n";
-		logger[INFO] << "tests: ";
+		logg[INFO] << "comparator: " << comparator << "\n";
+		logg[INFO] << "tests: ";
 		for(size_t i = 0; i < tests.size(); ++i) {
-			logger[DEBUG] << tests[i] << " ";
+			logg[DEBUG] << tests[i] << " ";
 		}
-		logger[DEBUG] << "\n";
-		logger[INFO] << "exclude: " << ((exclude) ? "true" : "false") << "\n";
-		logger[INFO] << "quite: " << ((quite) ? "true" : "false") << "\n";
-		logger[INFO] << "disableChecking: " << ((disableChecking) ? "true" : "false") << "\n";
-		logger[INFO] << "gen: " << ((gen) ? "true" : "false") << "\n";
-		logger[INFO] << "genLimit: " << genLimit << "\n";
+		logg[DEBUG] << "\n";
+		logg[INFO] << "exclude: " << ((exclude) ? "true" : "false") << "\n";
+		logg[INFO] << "quite: " << ((quite) ? "true" : "false") << "\n";
+		logg[INFO] << "disableChecking: " << ((disableChecking) ? "true" : "false") << "\n";
+		logg[INFO] << "gen: " << ((gen) ? "true" : "false") << "\n";
+		logg[INFO] << "genLimit: " << genLimit << "\n";
+		logg[INFO] << "runSource: " << runSource << "\n";
+		logg[INFO] << "runTest: " << runTest << "\n";
+		logg[INFO] << "runComparator: " << runComparator << "\n";
+		logg[DEBUG] << "\n";
 	}
 };
 
-std::map<std::string, std::vector<std::string>> compileargs = {
-	{"cpp", {"g++", "-Wall", "-Wextra", "-Wpedantic", "-g"}},
-	{"c", {"gcc", "-Wall", "-Wextra", "-Wpedantic", "-g"}},
+static std::map<std::string, std::pair<std::string, std::string>> cmds = {
+	{".cpp", {"g++ -Wall -Wextra -Wpedantic -g -O2 -o", ""}},
+	{".c", {"gcc -Wall -Wextra -Wpedantic -g -O2 -o", ""}},
+	{".py", {"", "python3"}},
+};
+
+struct Test {
+	size_t num;
+	std::string input;
+	std::vector<std::string> outputs;
+	std::string got;
 };
 
 Params parseArguments(int argc, char* argv[]);
@@ -87,3 +112,6 @@ bool parseTestArg(std::string s, std::vector<int>& tests);
 void usage();
 bool fileExist(const std::string& path);
 void checkFiles(const Params& params);
+void parseFiles(const Params& params, std::map<int, Test>& tests);
+void compile(Params& params);
+void prepareFile(const std::string buildname, std::string& filename, std::string& run);
