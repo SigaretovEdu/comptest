@@ -25,204 +25,203 @@ enum Mode { INFO = 0, DEBUG = 1, OK = 2, ER = 3, TL = 4, WA = 5, UK = 6 };
 class Parser;
 
 const std::map<std::string, std::string> colors = {
-	{"clear", "\033[0;0;0m"}, {"er", "\033[31m"}, {"ok", "\033[32m"},
-	{"uk", "\033[33m"},		  {"tl", "\033[31m"},	 {"wa", "\033[31m"},
+    {"clear", "\033[0;0;0m"}, {"er", "\033[31m"}, {"ok", "\033[32m"},
+    {"uk", "\033[33m"},       {"tl", "\033[31m"}, {"wa", "\033[31m"},
 };
 class Logger {
   private:
-
-      Mode last;
+    Mode last;
 
   public:
-	Logger() {}
+    Logger() {}
 
-	Logger& operator[](Mode l) {
+    Logger& operator[](Mode l) {
         this->set(l);
-		switch(l) {
-			case INFO: {
-				std::cout << "[INFO] ";
-				break;
-			}
-			case ER: {
-				std::cout << "[ER] ";
-				break;
-			}
-			case OK: {
-				std::cout << "[OK] ";
-				break;
-			}
-			case UK: {
-				std::cout << "[UK] ";
-				break;
-			}
-			case TL: {
-				std::cout << "[TL] ";
-				break;
-			}
-			case WA: {
-				std::cout << "[WA] ";
-				break;
-			}
-			case DEBUG: {
-				break;
-			}
-		}
-		return *this;
-	}
+        switch(l) {
+            case INFO: {
+                std::cout << "[INFO] ";
+                break;
+            }
+            case ER: {
+                std::cout << "[ER] ";
+                break;
+            }
+            case OK: {
+                std::cout << "[OK] ";
+                break;
+            }
+            case UK: {
+                std::cout << "[UK] ";
+                break;
+            }
+            case TL: {
+                std::cout << "[TL] ";
+                break;
+            }
+            case WA: {
+                std::cout << "[WA] ";
+                break;
+            }
+            case DEBUG: {
+                break;
+            }
+        }
+        return *this;
+    }
 
-	void clear() {
-		std::cout << colors.at("clear");
-		std::cout.flush();
-	}
-
-    void set(Mode mode) {
-		switch(mode) {
-			case INFO: {
-				std::cout << colors.at("clear");
-				break;
-			}
-			case ER: {
-				std::cout << colors.at("er");
-				break;
-			}
-			case OK: {
-				std::cout << colors.at("ok");
-				break;
-			}
-			case UK: {
-				std::cout << colors.at("uk");
-				break;
-			}
-			case TL: {
-				std::cout << colors.at("tl");
-				break;
-			}
-			case WA: {
-				std::cout << colors.at("wa");
-				break;
-			}
-			case DEBUG: {
-				break;
-			}
-		}
+    void clear() {
+        std::cout << colors.at("clear");
         std::cout.flush();
     }
 
-	template<typename T>
-	Logger& operator<<(const T& s) {
-		std::cout << s;
-		return *this;
-	}
+    void set(Mode mode) {
+        switch(mode) {
+            case INFO: {
+                std::cout << colors.at("clear");
+                break;
+            }
+            case ER: {
+                std::cout << colors.at("er");
+                break;
+            }
+            case OK: {
+                std::cout << colors.at("ok");
+                break;
+            }
+            case UK: {
+                std::cout << colors.at("uk");
+                break;
+            }
+            case TL: {
+                std::cout << colors.at("tl");
+                break;
+            }
+            case WA: {
+                std::cout << colors.at("wa");
+                break;
+            }
+            case DEBUG: {
+                break;
+            }
+        }
+        std::cout.flush();
+    }
+
+    template<typename T>
+    Logger& operator<<(const T& s) {
+        std::cout << s;
+        return *this;
+    }
 };
 static Logger logg;
 
 struct Params {
-	std::string sourceFile;
-	std::vector<std::string> testFiles;
-	std::string comparator;
-	std::vector<int> tests;
-	bool exclude;
-	bool quite;
-	bool disableChecking;
-	bool gen;
-	int genLimit;
+    std::string sourceFile;
+    std::vector<std::string> testFiles;
+    std::string comparator;
+    std::vector<int> tests;
+    bool exclude;
+    bool quite;
+    bool disableChecking;
+    bool gen;
+    int genLimit;
 
-	int tl;
+    int tl;
 
-	std::string buildname;
-	std::string runSource;
-	std::string runComparator;
-	std::string runTest;
+    std::string buildname;
+    std::string runSource;
+    std::string runComparator;
+    std::string runTest;
 
-	Params():
-		exclude(false), quite(false), disableChecking(false), gen(false), genLimit(-1), tl(1) {}
+    Params():
+        exclude(false), quite(false), disableChecking(false), gen(false), genLimit(-1), tl(1) {}
 
-	void info() const {
-		logg[INFO] << "sourceFile: " << sourceFile << "\n";
-		logg[INFO] << "testFiles: " << testFiles.size() << "\n";
-		for(size_t i = 0; i < testFiles.size(); ++i) {
-			logg[INFO] << "\t" << testFiles[i] << "\n";
-		}
-		logg[INFO] << "comparator: " << comparator << "\n";
-		logg[INFO] << "tests: ";
-		for(size_t i = 0; i < tests.size(); ++i) {
-			logg[DEBUG] << tests[i] << " ";
-		}
-		logg[DEBUG] << "\n";
-		logg[INFO] << "exclude: " << ((exclude) ? "true" : "false") << "\n";
-		logg[INFO] << "quite: " << ((quite) ? "true" : "false") << "\n";
-		logg[INFO] << "disableChecking: " << ((disableChecking) ? "true" : "false") << "\n";
-		logg[INFO] << "gen: " << ((gen) ? "true" : "false") << "\n";
-		logg[INFO] << "genLimit: " << genLimit << "\n";
-		logg[INFO] << "tl: " << tl << "\n";
-		logg[INFO] << "buildname: " << buildname << "\n";
-		logg[INFO] << "runSource: " << runSource << "\n";
-		logg[INFO] << "runTest: " << runTest << "\n";
-		logg[INFO] << "runComparator: " << runComparator << "\n";
-		logg[DEBUG] << "\n";
-	}
+    void info() const {
+        logg[INFO] << "sourceFile: " << sourceFile << "\n";
+        logg[INFO] << "testFiles: " << testFiles.size() << "\n";
+        for(size_t i = 0; i < testFiles.size(); ++i) {
+            logg[INFO] << "\t" << testFiles[i] << "\n";
+        }
+        logg[INFO] << "comparator: " << comparator << "\n";
+        logg[INFO] << "tests: ";
+        for(size_t i = 0; i < tests.size(); ++i) {
+            logg[DEBUG] << tests[i] << " ";
+        }
+        logg[DEBUG] << "\n";
+        logg[INFO] << "exclude: " << ((exclude) ? "true" : "false") << "\n";
+        logg[INFO] << "quite: " << ((quite) ? "true" : "false") << "\n";
+        logg[INFO] << "disableChecking: " << ((disableChecking) ? "true" : "false") << "\n";
+        logg[INFO] << "gen: " << ((gen) ? "true" : "false") << "\n";
+        logg[INFO] << "genLimit: " << genLimit << "\n";
+        logg[INFO] << "tl: " << tl << "\n";
+        logg[INFO] << "buildname: " << buildname << "\n";
+        logg[INFO] << "runSource: " << runSource << "\n";
+        logg[INFO] << "runTest: " << runTest << "\n";
+        logg[INFO] << "runComparator: " << runComparator << "\n";
+        logg[DEBUG] << "\n";
+    }
 };
 
 static std::map<std::string, std::pair<std::string, std::string>> cmds = {
-	{".cpp", {"g++ -Wall -Wextra -Wpedantic -g -O2 -o", ""}},
-	{".c", {"gcc -Wall -Wextra -Wpedantic -g -O2 -o", ""}},
-	{".py", {"", "python3"}},
+    {".cpp", {"g++ -Wall -Wextra -Wpedantic -g -O2 -o", ""}},
+    {".c", {"gcc -Wall -Wextra -Wpedantic -g -O2 -o", ""}},
+    {".py", {"", "python3"}},
 };
 
 struct Test {
-	size_t num;
-	std::string input;
-	std::vector<std::string> outputs;
+    size_t num;
+    std::string input;
+    std::vector<std::string> outputs;
 };
 
 struct RunInfo {
-	pid_t id;
-	int fd;
+    pid_t id;
+    int fd;
 };
 
 struct Result {
-	std::vector<int> ok;
-	std::vector<int> er;
-	std::vector<int> tl;
-	std::vector<int> wa;
-	std::vector<int> uk;
+    std::vector<int> ok;
+    std::vector<int> er;
+    std::vector<int> tl;
+    std::vector<int> wa;
+    std::vector<int> uk;
 
-	void operator()(Mode res, int num) {
-		switch(res) {
-			case OK: {
-				ok.push_back(num);
-				break;
-			}
-			case ER: {
-				er.push_back(num);
-				break;
-			}
-			case TL: {
-				tl.push_back(num);
-				break;
-			}
-			case WA: {
-				wa.push_back(num);
-				break;
-			}
-			case UK: {
-				uk.push_back(num);
-				break;
-			}
-			default: {
-				logg[ER] << "Unknown mode\n";
-				exit(1);
-			}
-		}
-	}
+    void operator()(Mode res, int num) {
+        switch(res) {
+            case OK: {
+                ok.push_back(num);
+                break;
+            }
+            case ER: {
+                er.push_back(num);
+                break;
+            }
+            case TL: {
+                tl.push_back(num);
+                break;
+            }
+            case WA: {
+                wa.push_back(num);
+                break;
+            }
+            case UK: {
+                uk.push_back(num);
+                break;
+            }
+            default: {
+                logg[ER] << "Unknown mode\n";
+                exit(1);
+            }
+        }
+    }
 
-	void info() const {
-		logg[INFO] << "ok: " << ok.size() << "\n";
-		logg[INFO] << "er: " << er.size() << "\n";
-		logg[INFO] << "tl: " << tl.size() << "\n";
-		logg[INFO] << "wa: " << wa.size() << "\n";
-		logg[INFO] << "uk: " << uk.size() << "\n";
-	}
+    void info() const {
+        logg[INFO] << "ok: " << ok.size() << "\n";
+        logg[INFO] << "er: " << er.size() << "\n";
+        logg[INFO] << "tl: " << tl.size() << "\n";
+        logg[INFO] << "wa: " << wa.size() << "\n";
+        logg[INFO] << "uk: " << uk.size() << "\n";
+    }
 };
 
 Params parseArguments(int argc, char* argv[]);
