@@ -65,19 +65,6 @@ Params parseArguments(int argc, char* argv[]) {
                     exit(1);
                 }
                 params.comparator = argv[i];
-            } else if(opt == "-g" || opt == "--gen") {
-                if(i == argc - 1 || (i < argc - 1 && argv[i + 1][0] == '-')) {
-                    logg[ER] << "Option '" << opt << "' requires argument\n";
-                    exit(1);
-                }
-
-                ++i;
-                if(!isNumber(argv[i])) {
-                    logg[ER] << "Argument for option '" << opt << "' must be integer\n";
-                    exit(1);
-                }
-                params.gen = true;
-                params.genLimit = std::atoi(argv[i]);
             } else if(opt == "-t" || opt == "--test") {
                 if(i == argc - 1) {
                     logg[ER] << "Option '" << opt << "' requires argument\n";
@@ -114,16 +101,6 @@ Params parseArguments(int argc, char* argv[]) {
     if(params.testFiles.empty()) {
         logg[ER] << "You must specify at least one test file\n";
         exit(1);
-    }
-    if(params.gen && !isCode(params.testFiles[0])) {
-        logg[ER] << "With --gen option testfile must be code file\n";
-        exit(1);
-    }
-    if(!params.gen) {
-        if(isCode(params.testFiles[0])) {
-            logg[ER] << "Test file cannot be code file\n";
-            exit(1);
-        }
     }
 
     return params;
@@ -325,9 +302,6 @@ void compile(Params& params) {
     prepareFile(buildname, params.sourceFile, params.runSource);
     if(!params.comparator.empty()) {
         prepareFile(buildname, params.comparator, params.runComparator);
-    }
-    if(params.gen) {
-        prepareFile(buildname, params.testFiles[0], params.runTest);
     }
 
     // params.info();

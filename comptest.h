@@ -123,8 +123,6 @@ struct Params {
     bool exclude;
     bool quite;
     bool disableChecking;
-    bool gen;
-    int genLimit;
 
     int tl;
 
@@ -151,8 +149,6 @@ struct Params {
         logg[INFO] << "exclude: " << ((exclude) ? "true" : "false") << "\n";
         logg[INFO] << "quite: " << ((quite) ? "true" : "false") << "\n";
         logg[INFO] << "disableChecking: " << ((disableChecking) ? "true" : "false") << "\n";
-        logg[INFO] << "gen: " << ((gen) ? "true" : "false") << "\n";
-        logg[INFO] << "genLimit: " << genLimit << "\n";
         logg[INFO] << "tl: " << tl << "\n";
         logg[INFO] << "buildname: " << buildname << "\n";
         logg[INFO] << "runSource: " << runSource << "\n";
