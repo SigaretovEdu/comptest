@@ -2,14 +2,39 @@
 
 int main(int argc, char* argv[]) {
 	Params params = parseArguments(argc, argv);
-	params.info();
+
+	// params.info();
+
 	checkFiles(params);
 
 	std::map<int, Test> tests;
 
 	parseFiles(params, tests);
 
+	{
+		bool f = false;
+		for(int& num: params.tests) {
+			if(!params.exclude && tests.find(num) == tests.end()) {
+				logg[ER] << "There is no test with id " << num << "\n";
+				f = true;
+			}
+		}
+		if(f) {
+			exit(1);
+		}
+	}
+
 	compile(params);
+
+	Result result;
+
+	if(params.comparator.empty()) {
+		result = runTests(params, tests);
+	}
+
+	printSummary(result);
+
+	clean(params);
 
 	return 0;
 }
@@ -30,39 +55,38 @@ Params parseArguments(int argc, char* argv[]) {
 				exit(0);
 			} else if(opt == "-c" || opt == "--compare") {
 				if(i == argc - 1 || (i < argc - 1 && argv[i + 1][0] == '-')) {
-					logg[ERROR] << "Option '" << opt << "' requires argument\n";
+					logg[ER] << "Option '" << opt << "' requires argument\n";
 					exit(1);
 				}
 
 				++i;
 				if(!isCode(argv[i])) {
-					logg[ERROR] << "--compare file must be code file\n";
+					logg[ER] << "--compare file must be code file\n";
 					exit(1);
 				}
 				params.comparator = argv[i];
 			} else if(opt == "-g" || opt == "--gen") {
 				if(i == argc - 1 || (i < argc - 1 && argv[i + 1][0] == '-')) {
-					logg[ERROR] << "Option '" << opt << "' requires argument\n";
+					logg[ER] << "Option '" << opt << "' requires argument\n";
 					exit(1);
 				}
 
 				++i;
 				if(!isNumber(argv[i])) {
-					logg[ERROR] << "Argument for option '" << opt << "' must be integer\n";
+					logg[ER] << "Argument for option '" << opt << "' must be integer\n";
 					exit(1);
 				}
 				params.gen = true;
 				params.genLimit = std::atoi(argv[i]);
 			} else if(opt == "-t" || opt == "--test") {
 				if(i == argc - 1) {
-					logg[ERROR] << "Option '" << opt << "' requires argument\n";
+					logg[ER] << "Option '" << opt << "' requires argument\n";
 					exit(1);
 				}
-
 				++i;
 				params.exclude = parseTestArg(argv[i], params.tests);
 			} else {
-				logg[ERROR] << "Unknown option '" << opt << "'\n";
+				logg[ER] << "Unknown option '" << opt << "'\n";
 				exit(1);
 			}
 		} else {
@@ -73,7 +97,7 @@ Params parseArguments(int argc, char* argv[]) {
 					params.sourceFile = opt;
 				} else {
 					if(!params.testFiles.empty()) {
-						logg[ERROR] << "You specified to much files\n";
+						logg[ER] << "You specified to much files\n";
 						exit(1);
 					} else {
 						params.testFiles.push_back(opt);
@@ -84,20 +108,20 @@ Params parseArguments(int argc, char* argv[]) {
 	}
 
 	if(params.sourceFile.empty()) {
-		logg[ERROR] << "You must specify source file\n";
+		logg[ER] << "You must specify source file\n";
 		exit(1);
 	}
 	if(params.testFiles.empty()) {
-		logg[ERROR] << "You must specify at least one test file\n";
+		logg[ER] << "You must specify at least one test file\n";
 		exit(1);
 	}
 	if(params.gen && !isCode(params.testFiles[0])) {
-		logg[ERROR] << "With --gen option testfile must be code file\n";
+		logg[ER] << "With --gen option testfile must be code file\n";
 		exit(1);
 	}
 	if(!params.gen) {
 		if(isCode(params.testFiles[0])) {
-			logg[ERROR] << "Test file cannot be code file\n";
+			logg[ER] << "Test file cannot be code file\n";
 			exit(1);
 		}
 	}
@@ -135,7 +159,7 @@ bool parseTestArg(std::string s, std::vector<int>& tests) {
 		while(pos < s.size()) {
 			std::string number = s.substr(0, pos);
 			if(!isNumber(number)) {
-				logg[ERROR] << "Tests ids must be integer\n";
+				logg[ER] << "Tests ids must be integer\n";
 				exit(1);
 			}
 			tests.push_back(std::atoi(number.c_str()));
@@ -143,7 +167,7 @@ bool parseTestArg(std::string s, std::vector<int>& tests) {
 			pos = s.find(',');
 		}
 		if(!isNumber(s)) {
-			logg[ERROR] << "Tests ids must be integer\n";
+			logg[ER] << "Tests ids must be integer\n";
 			exit(1);
 		}
 		tests.push_back(std::atoi(s.c_str()));
@@ -152,7 +176,7 @@ bool parseTestArg(std::string s, std::vector<int>& tests) {
 		std::string sub1 = s.substr(0, pos);
 		std::string sub2 = s.substr(pos + 2, s.size() - (pos + 2));
 		if(!isNumber(sub1) || !isNumber(sub2)) {
-			logg[ERROR] << "Tests ids must be integer\n";
+			logg[ER] << "Tests ids must be integer\n";
 			exit(1);
 		}
 		int num1 = std::atoi(sub1.c_str()), num2 = std::atoi(sub2.c_str());
@@ -161,7 +185,7 @@ bool parseTestArg(std::string s, std::vector<int>& tests) {
 		}
 	} else {
 		if(!isNumber(s)) {
-			logg[ERROR] << "Test id must be integer\n";
+			logg[ER] << "Test id must be integer\n";
 		}
 		int num = std::atoi(s.c_str());
 		tests.push_back(num);
@@ -197,22 +221,22 @@ void usage() {
 
 void checkFiles(const Params& params) {
 	if(!std::filesystem::exists(params.sourceFile)) {
-		logg[ERROR] << params.sourceFile << " doesn't exist\n";
+		logg[ER] << params.sourceFile << " doesn't exist\n";
 		exit(1);
 	}
 	for(const auto& s: params.testFiles) {
 		if(!std::filesystem::exists(s)) {
-			logg[ERROR] << s << " doesn't exist\n";
+			logg[ER] << s << " doesn't exist\n";
 			exit(1);
 		}
 	}
 	if(!params.comparator.empty() && !std::filesystem::exists(params.comparator)) {
-		logg[ERROR] << "Comparator file doesn't exist\n";
+		logg[ER] << "Comparator file doesn't exist\n";
 		exit(1);
 	}
 }
 
-void parseFiles(const Params& params, std::map<int, Test>& tests) {
+void parseFiles(Params& params, std::map<int, Test>& tests) {
 	enum State { WAIT_INPUT, READ_INPUT, READ_OUTPUT };
 
 	State state;
@@ -228,6 +252,13 @@ void parseFiles(const Params& params, std::map<int, Test>& tests) {
 		while(std::getline(input, line)) {
 			switch(state) {
 				case WAIT_INPUT: {
+					if(line.size() >= 2 && line.substr(0, 2) == "TL") {
+						ss << line;
+						int tl;
+						ss >> tmp >> tmp >> tl;
+						ss.clear();
+						params.tl = std::max<int>(1, tl);
+					}
 					if(line.size() >= 4 && line.substr(0, 3) == "-- ") {
 						ss << line;
 						ss >> tmp;
@@ -285,8 +316,9 @@ void compile(Params& params) {
 	using namespace std::filesystem;
 
 	std::string buildname = path(params.sourceFile).stem();
+	params.buildname = buildname;
 	if(!exists(buildname) && create_directory(buildname) != true) {
-		logg[ERROR] << "Failed to create " << buildname << " directory\n";
+		logg[ER] << "Failed to create " << buildname << " directory\n";
 		exit(1);
 	}
 
@@ -298,7 +330,7 @@ void compile(Params& params) {
 		prepareFile(buildname, params.testFiles[0], params.runTest);
 	}
 
-	params.info();
+	// params.info();
 }
 
 void prepareFile(const std::string buildname, std::string& filename, std::string& run) {
@@ -323,24 +355,191 @@ void prepareFile(const std::string buildname, std::string& filename, std::string
 	}
 }
 
-// void runTests(Test& test, std::string executable, ) {
-// 	int fdToChild[2];
-// 	int fdToParent[2];
-//
-// 	pipe(fdToChild);
-// 	pipe(fdToParent);
-//
-// 	switch(fork()) {
-// 		case -1: {
-// 			logg[ERROR] << "Failed to fork\n";
-// 			exit(1);
-// 			break;
-// 		}
-// 		case 0: {
-// 			break;
-// 		}
-// 		default: {
-// 			break;
-// 		}
-// 	}
-// }
+void startTest(int tl, const Test& test, const std::string& executable, RunInfo& info) {
+	int toChild[2];
+	int toParent[2];
+	if(pipe(toChild) == -1) {
+		logg[ER] << "Failed to create pipe\n";
+		exit(1);
+	}
+	if(pipe(toParent) == -1) {
+		logg[ER] << "Failed to create pipe\n";
+		exit(1);
+	}
+
+	int id = fork();
+	switch(id) {
+		case -1: {
+			logg[ER] << "Failed to fork\n";
+			exit(1);
+			break;
+		}
+		case 0: {
+			// logg[INFO] << "started " << getpid() << "\n";
+			dup2(toChild[0], STDIN_FILENO);
+			close(toChild[0]);
+			close(toChild[1]);
+			dup2(toParent[1], STDOUT_FILENO);
+			close(toParent[0]);
+			close(toParent[1]);
+
+			alarm(tl);
+
+			if(execve(executable.c_str(), nullptr, nullptr) == -1) {
+				logg[ER] << "Failed to execute " << executable << "\n";
+				exit(1);
+			}
+
+			break;
+		}
+		default: {
+			info.id = id;
+			close(toChild[0]);
+			close(toParent[1]);
+			break;
+		}
+	}
+
+	write(toChild[1], &test.input.front(), test.input.size());
+
+	close(toChild[1]);
+
+	info.fd = toParent[0];
+}
+
+void readPipe(int fd, std::string& text) {
+	text.clear();
+	char c;
+	while(read(fd, &c, 1) > 0) {
+		if(c == '\n') {
+			deleteTrailing(text);
+		}
+		text += c;
+	}
+}
+
+Result runTests(const Params& params, const std::map<int, Test>& tests) {
+	std::map<int, RunInfo> fds;
+	for(const auto& [num, test]: tests) {
+		startTest(params.tl, test, params.runSource, fds[num]);
+	}
+
+	std::string output;
+	Result result;
+
+	Mode res;
+	for(const auto [num, info]: fds) {
+		int status;
+		res = OK;
+
+		waitpid(info.id, &status, 0);
+
+		if(status != 0) {
+			res = ER;
+			if(status == 14) {
+				res = TL;
+			}
+		}
+
+		readPipe(info.fd, output);
+		close(info.fd);
+
+		if(res == OK) {
+			if(!tests.at(num).outputs.empty() && !params.disableChecking) {
+				if(!checkOutput(output, tests.at(num).outputs)) {
+					res = WA;
+				}
+			} else {
+				res = UK;
+			}
+		}
+
+		if(!params.quite && res != OK) {
+			logg[res] << num << "\n";
+			logg[DEBUG] << "-- input\n";
+			logg.clear();
+			logg[DEBUG] << tests.at(num).input;
+			logg.set(res);
+			logg[DEBUG] << "-- output\n";
+			if(!params.disableChecking) {
+				printDiff(params, output, tests.at(num).outputs[0]);
+			} else {
+				logg.clear();
+				logg[DEBUG] << output;
+			}
+			logg.set(res);
+			logg[DEBUG] << "--\n\n";
+		}
+		result(res, num);
+	}
+
+	return result;
+}
+
+bool checkOutput(const std::string& got, const std::vector<std::string>& outputs) {
+	for(const auto& s: outputs) {
+		if(got == s) {
+			return true;
+		}
+	}
+	return false;
+}
+
+void printDiff(const Params& params, const std::string& left, const std::string& right) {
+	std::ofstream leftfile(params.buildname + "/left.txt",
+						   std::ios_base::out | std::ios_base::trunc);
+	std::ofstream rightfile(params.buildname + "/right.txt",
+							std::ios_base::out | std::ios_base::trunc);
+
+	leftfile << left;
+	rightfile << right;
+
+	leftfile.close();
+	rightfile.close();
+
+	logg.clear();
+
+	std::system(("icdiff --no-headers --whole-file --color-map=change:red_bold " +
+				 params.buildname + "/left.txt " + params.buildname + "/right.txt")
+					.c_str());
+}
+
+void clean(const Params& params) {
+	std::filesystem::remove_all(params.buildname);
+}
+
+void printSummary(const Result& result) {
+	// result.info();
+	logg[DEBUG] << "\n";
+
+	printCategory(OK, result.ok);
+	if(!result.er.empty()) {
+		printCategory(ER, result.er);
+	}
+	if(!result.tl.empty()) {
+		printCategory(TL, result.tl);
+	}
+	if(!result.wa.empty()) {
+		printCategory(WA, result.wa);
+	}
+	if(!result.uk.empty()) {
+		printCategory(UK, result.uk);
+	}
+}
+
+void printCategory(Mode mode, const std::vector<int>& nums) {
+	logg[mode] << "total(" << nums.size() << ") : ";
+	for(size_t i = 0; i < nums.size(); ++i) {
+		if(i != 0) {
+			logg[DEBUG] << ", ";
+		}
+		logg[DEBUG] << nums[i];
+	}
+	logg[DEBUG] << "\n";
+}
+
+void deleteTrailing(std::string& s) {
+	while(!s.empty() && s.back() == ' ') {
+		s.pop_back();
+	}
+}

@@ -1,22 +1,5 @@
 # Plan for comptest 2.0
 
-1. Write in C/C++
-
-## Features
-
-comptest source test [-c,--checker checker] [-t,--test
-+-[NUM][NUM,...,NUM][NUM..NUM]] [-q, --quite] [-d, --disable-test]
-
-1. Can use .c .cpp .py files for source and checker
-2. Can specify test with -t/--test. If NUM > 0, then use only this test,
-   otherwise exclude test. NUM can be write as "NUM" for one test, "NUM,...,NUM"
-   for a list of tests, "NUM..NUM" for range
-3. Can specify quite output, for each test there will be only result
-4. Can specify -d/--disable-test to disable comparsion of output and output from
-   test
-5. Can specify TL in testfile
-6. Use custom diff
-
 Output should be like:
 
 ```
@@ -42,17 +25,25 @@ ok(num) failed(num) unknown(num)
 Testfile:
 
 ```
-TL = 3
+TL = 2
 
->> [test_num]
-input
->>
-output
-<<
+-- 1
+1
+2
+-- out
+1
+2
+14
+15
+--
 
->>
-input
-<<
+-- 2
+9
+10
+-- out
+9
+10
+--
 ```
 
 ```
@@ -79,28 +70,31 @@ Usage: comptest [OPTIONS...] sourcefile testsfiles...
                                                         use comparator
 ```
 
-comptest source test [-c,--checker checker] [-t,--test
-+-[NUM][NUM,...,NUM][NUM..NUM]] [-q, --quite] [-d, --disable-test]
+Example output:
 
 ```
--- 1
-1
-2
--- out
-1 2 3
--- out
-2 1 3
+TL = 2
+
+-- test_3 WA
+diff
 --
 
--- 2
-2
-3
--- out
-2 3 5
+-- test_7 WA
+diff
 --
 
--- 3
-1
-2
+-- test_9 WA
+diff
 --
+
+[OK] 5
+[WA] 3
+```
+
+--quite
+
+```
+TL = 2
+[OK] 5: 1, 2, 3, 4, 5
+[WA] 3: 6, 7, 8
 ```
