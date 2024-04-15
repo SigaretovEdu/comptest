@@ -78,7 +78,7 @@ Where you can see every testcase, that failed, and for this cases your output an
 
 `TL` - your solution worked for too long and hit time limit
 
-`UK` - there is no expected output for this solution, so result is UNKNOWN
+`UK` - there is no expected output for this case, so result is UNKNOWN
 
 # `.test` file format
 
@@ -110,7 +110,7 @@ TL = 2
 
 For test id you must provide unique integer. You can specify as many possible outputs as you want, or not even provide.
 
-You can provide as many testfiles as you want, but test ids should be unique number between all files.
+You can provide as many testfiles as you want, but test ids should be a unique number between all files.
 
 You can specify timelimit in seconds for testcases.
 

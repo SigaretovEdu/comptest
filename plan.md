@@ -63,11 +63,6 @@ Usage: comptest [OPTIONS...] sourcefile testsfiles...
 
     -h, --help                                          show this message
 
-    -g, --gen NUM                                       will generate tests using testfile while outputs from source
-                                                        file and comparator are equal, with NUM you can specify
-                                                        maximum tests to generate, in this case the testfile is
-                                                        subject to the same restrictions as sourcefile and you must
-                                                        use comparator
 ```
 
 Example output:
